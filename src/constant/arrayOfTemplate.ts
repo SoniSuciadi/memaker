@@ -1,10 +1,10 @@
 import {ImageSourcePropType} from 'react-native';
-
-export const arrayOfTemplate: {
+export type Template = {
   id: string;
   image: ImageSourcePropType;
   title: string;
-}[] = [
+};
+export const arrayOfTemplate: Template[] = [
   {
     id: '1',
     image: require('../assets/template/1.jpg'),

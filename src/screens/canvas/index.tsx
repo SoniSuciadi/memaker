@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useMemo} from 'react';
 import {
   SafeAreaView,
   View,
@@ -14,6 +14,7 @@ import {RouteProp} from '@react-navigation/native';
 import {arrayOfTemplate} from '../../constant/arrayOfTemplate';
 import DraggableItem from '../../components/draggable-item';
 import ZoomableCanvas from '../../components/zoomable-canvas';
+import useImageSizing from '../../hooks/useImageSizing';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -25,50 +26,13 @@ type Props = {
 
 const CanvasScreen: React.FC<Props> = ({route}) => {
   const {canvasId} = route.params;
-  const [containerSize, setContainerSize] = useState({width: 0, height: 0});
-  const [imageSize, setImageSize] = useState({width: 0, height: 0});
-  const [calculatedSize, setCalculatedSize] = useState({width: 0, height: 0});
 
   const selectTemplateImage = useMemo(
     () => arrayOfTemplate.find(item => item.id === canvasId),
     [canvasId],
   );
 
-  const handleLayout = (event: any) => {
-    const {width, height} = event.nativeEvent.layout;
-    setContainerSize({width, height});
-  };
-
-  useEffect(() => {
-    if (selectTemplateImage) {
-      const {width, height} = Image.resolveAssetSource(
-        selectTemplateImage.image,
-      );
-      setImageSize({width, height});
-    }
-  }, [selectTemplateImage]);
-
-  useEffect(() => {
-    if (containerSize.width > 0 && imageSize.width > 0) {
-      const containerRatio = containerSize.height / containerSize.width;
-      const imageRatio = imageSize.height / imageSize.width;
-
-      let finalWidth, finalHeight;
-
-      if (imageRatio > containerRatio) {
-        finalHeight = containerSize.height;
-        finalWidth = finalHeight / imageRatio;
-      } else {
-        finalWidth = containerSize.width;
-        finalHeight = finalWidth * imageRatio;
-      }
-
-      setCalculatedSize({
-        width: finalWidth,
-        height: finalHeight,
-      });
-    }
-  }, [containerSize, imageSize]);
+  const {calculatedSize, handleLayout} = useImageSizing(selectTemplateImage);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -102,7 +66,7 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
               )}
 
               <DraggableItem zIndex={3}>
-                <TextInput placeholder="Drag me" />
+                <TextInput placeholder="Drag me" style={styles.textInput} />
               </DraggableItem>
             </View>
           </ZoomableCanvas>
@@ -112,6 +76,7 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
   );
 };
 
+// Styles tetap sama
 const styles = StyleSheet.create({
   container: {
     flex: 1,

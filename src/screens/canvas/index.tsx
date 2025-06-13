@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
   SafeAreaView,
   View,
@@ -7,95 +7,106 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import {
-  GestureHandlerRootView,
-  GestureDetector,
-  Gesture,
-} from 'react-native-gesture-handler';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import {GestureHandlerRootView, TextInput} from 'react-native-gesture-handler';
+import {RootStackParamList} from '../../navigation/config';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {RouteProp} from '@react-navigation/native';
+import {arrayOfTemplate} from '../../constant/arrayOfTemplate';
+import DraggableItem from '../../components/draggable-item';
+import ZoomableCanvas from '../../components/zoomable-canvas';
 
-const {width: screenWidth, height: screenHeight} = Dimensions.get('window');
-const AnimatedImage = Animated.createAnimatedComponent(Image);
+const {width: screenWidth} = Dimensions.get('window');
 
-const CanvasScreen: React.FC = () => {
-  const imageSize = {width: 200, height: 200};
+type CanvasScreenRouteProp = RouteProp<RootStackParamList, 'canvas'>;
+type Props = {
+  navigation: StackNavigationProp<RootStackParamList, 'canvas'>;
+  route: CanvasScreenRouteProp;
+};
 
-  const scale = useSharedValue(1);
-  const savedScale = useSharedValue(1);
-  const translateX = useSharedValue(screenWidth / 2 - imageSize.width / 2);
-  const translateY = useSharedValue(screenHeight / 4);
-  const offset = useSharedValue({x: 0, y: 0});
+const CanvasScreen: React.FC<Props> = ({route}) => {
+  const {canvasId} = route.params;
+  const [containerSize, setContainerSize] = useState({width: 0, height: 0});
+  const [imageSize, setImageSize] = useState({width: 0, height: 0});
+  const [calculatedSize, setCalculatedSize] = useState({width: 0, height: 0});
 
-  const panGesture = Gesture.Pan()
-    .onStart(() => {
-      offset.value = {
-        x: translateX.value,
-        y: translateY.value,
-      };
-    })
-    .onUpdate(e => {
-      translateX.value = offset.value.x + e.translationX / savedScale.value;
-      translateY.value = offset.value.y + e.translationY / savedScale.value;
-    })
-    .onEnd(() => {
-      const scaledWidth = imageSize.width * scale.value;
-      const scaledHeight = imageSize.height * scale.value;
+  const selectTemplateImage = useMemo(
+    () => arrayOfTemplate.find(item => item.id === canvasId),
+    [canvasId],
+  );
 
-      const maxX = screenWidth - scaledWidth;
-      const maxY = screenHeight * 0.7 - scaledHeight;
+  const handleLayout = (event: any) => {
+    const {width, height} = event.nativeEvent.layout;
+    setContainerSize({width, height});
+  };
 
-      translateX.value = withSpring(
-        Math.max(0, Math.min(translateX.value, maxX)),
-        {damping: 20},
+  useEffect(() => {
+    if (selectTemplateImage) {
+      const {width, height} = Image.resolveAssetSource(
+        selectTemplateImage.image,
       );
-      translateY.value = withSpring(
-        Math.max(0, Math.min(translateY.value, maxY)),
-        {damping: 20},
-      );
-    });
+      setImageSize({width, height});
+    }
+  }, [selectTemplateImage]);
 
-  const pinchGesture = Gesture.Pinch()
-    .onUpdate(e => {
-      scale.value = savedScale.value * e.scale;
-    })
-    .onEnd(() => {
-      scale.value = withSpring(Math.max(0.5, Math.min(scale.value, 3)));
-      savedScale.value = scale.value;
-    });
+  useEffect(() => {
+    if (containerSize.width > 0 && imageSize.width > 0) {
+      const containerRatio = containerSize.height / containerSize.width;
+      const imageRatio = imageSize.height / imageSize.width;
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    width: imageSize.width,
-    height: imageSize.height,
-    transform: [
-      {translateX: translateX.value},
-      {translateY: translateY.value},
-      {scale: scale.value},
-    ],
-  }));
+      let finalWidth, finalHeight;
+
+      if (imageRatio > containerRatio) {
+        finalHeight = containerSize.height;
+        finalWidth = finalHeight / imageRatio;
+      } else {
+        finalWidth = containerSize.width;
+        finalHeight = finalWidth * imageRatio;
+      }
+
+      setCalculatedSize({
+        width: finalWidth,
+        height: finalHeight,
+      });
+    }
+  }, [containerSize, imageSize]);
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Canvas Screen</Text>
 
       <GestureHandlerRootView style={styles.gestureContainer}>
-        <GestureDetector
-          gesture={Gesture.Simultaneous(panGesture, pinchGesture)}>
-          <View style={styles.canvas}>
-            <View style={styles.background} />
+        <View style={styles.canvasOuterContainer}>
+          <ZoomableCanvas style={styles.zoomableCanvas}>
+            <View style={styles.canvas} onLayout={handleLayout}>
+              <View style={styles.canvasBackground} />
 
-            <Text style={styles.text}>Editable Text</Text>
+              {selectTemplateImage ? (
+                <DraggableItem zIndex={2} initialPosition={{x: 0, y: 0}}>
+                  <Image
+                    source={selectTemplateImage.image}
+                    style={[
+                      styles.image,
+                      {
+                        width: calculatedSize.width,
+                        height: calculatedSize.height,
+                      },
+                    ]}
+                    resizeMode="contain"
+                    onLoad={() => console.log('Image loaded successfully')}
+                  />
+                </DraggableItem>
+              ) : (
+                <View style={styles.emptyCanvas}>
+                  <Text style={styles.emptyCanvasText}>Canvas Kosong</Text>
+                </View>
+              )}
 
-            <AnimatedImage
-              style={[styles.image, animatedStyle]}
-              source={require('../../assets/template/1.jpg')}
-              resizeMode="contain"
-            />
-          </View>
-        </GestureDetector>
+              <DraggableItem zIndex={3}>
+                <TextInput placeholder="Drag me" />
+              </DraggableItem>
+            </View>
+          </ZoomableCanvas>
+        </View>
       </GestureHandlerRootView>
     </SafeAreaView>
   );
@@ -104,17 +115,33 @@ const CanvasScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
   },
   gestureContainer: {
     flex: 1,
     width: '100%',
   },
-  canvas: {
+  canvasOuterContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'lightgray',
     overflow: 'hidden',
   },
-  background: {
+  zoomableCanvas: {
+    width: screenWidth * 0.9,
+    height: screenWidth * 0.9,
+  },
+  canvas: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'white',
+    position: 'relative',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'gray',
+  },
+  canvasBackground: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'lightgray',
     opacity: 0.3,
@@ -125,17 +152,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 10,
   },
-  text: {
-    position: 'absolute',
-    left: 150,
-    top: 150,
-    fontSize: 20,
-    color: 'black',
-    zIndex: 1,
+  image: {},
+  emptyCanvas: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
-  image: {
-    position: 'absolute',
-    zIndex: 2,
+  emptyCanvasText: {
+    fontSize: 18,
+    color: '#888',
+  },
+  textInput: {
+    minWidth: 100,
+    minHeight: 40,
+    backgroundColor: 'white',
   },
 });
 

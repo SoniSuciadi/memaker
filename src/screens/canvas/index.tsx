@@ -1,4 +1,4 @@
-import React, {useMemo} from 'react';
+import React, {useMemo, useState} from 'react';
 import {
   SafeAreaView,
   View,
@@ -16,6 +16,8 @@ import DraggableItem from '../../components/draggable-item';
 import ZoomableCanvas from '../../components/zoomable-canvas';
 import useImageSizing from '../../hooks/useImageSizing';
 import TextEditor from '../../components/text-editor';
+import {TextStyles} from '../../components/modal-text-input/types';
+import CanvasButtons from '../../components/canvas-buttons';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -27,7 +29,13 @@ type Props = {
 
 const CanvasScreen: React.FC<Props> = ({route}) => {
   const {canvasId} = route.params;
-
+  const [contents, setContents] = useState<TextStyles[]>([
+    {
+      text: '',
+      color: '#000000',
+      fontWeight: 'normal',
+    },
+  ]);
   const selectTemplateImage = useMemo(
     () => arrayOfTemplate.find(item => item.id === canvasId),
     [canvasId],
@@ -35,6 +43,25 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
 
   const {calculatedSize, handleLayout} = useImageSizing(selectTemplateImage);
 
+  const onDelete = (index: number) => {
+    setContents(prevContents => prevContents.filter((_, i) => i !== index));
+  };
+
+  const onDuplicate = (text: TextStyles) => {
+    setContents(prevContents => [...prevContents, text]);
+  };
+  const onAddText = () => {
+    setContents(prevContents => [
+      ...prevContents,
+      {
+        text: '',
+        color: '#000000',
+        fontWeight: 'normal',
+      },
+    ]);
+  };
+  const onAddImage = () => {};
+  const onExport = () => {};
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Canvas Screen</Text>
@@ -65,17 +92,34 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
                   <Text style={styles.emptyCanvasText}>Canvas Kosong</Text>
                 </View>
               )}
-
-              <DraggableItem zIndex={3}>
-                <TextEditor />
-              </DraggableItem>
-              <DraggableItem zIndex={3}>
-                <TextEditor />
-              </DraggableItem>
+              {contents.map((content, index) => (
+                <DraggableItem
+                  key={index}
+                  zIndex={3}
+                  initialPosition={{x: 0, y: 0}}>
+                  <TextEditor
+                    onDelete={() => onDelete(index)}
+                    onDuplicate={onDuplicate}
+                    textStyles={content}
+                    setTextStyles={styles => {
+                      setContents(prevContents =>
+                        prevContents.map((item, i) =>
+                          i === index ? styles : item,
+                        ),
+                      );
+                    }}
+                  />
+                </DraggableItem>
+              ))}
             </View>
           </ZoomableCanvas>
         </View>
       </GestureHandlerRootView>
+      <CanvasButtons
+        onAddImage={onAddImage}
+        onAddText={onAddText}
+        onExport={onExport}
+      />
     </SafeAreaView>
   );
 };

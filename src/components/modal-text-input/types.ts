@@ -18,4 +18,6 @@ export interface ModalTextInputRef {
 
 export interface ModalTextInputProps {
   onSave: (styles: TextStyles) => void;
+  onDelete: () => void;
+  onDuplicate: (text: TextStyles) => void;
 }

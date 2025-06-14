@@ -12,7 +12,7 @@ import ThemeButton from '../theme-button';
 import {ModalTextInputProps, ModalTextInputRef, TextEditorState} from './types';
 
 const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
-  ({onSave}, ref) => {
+  ({onSave, onDelete, onDuplicate}, ref) => {
     const [open, setOpen] = useState(false);
     const [state, setState] = useState<TextEditorState>({
       text: '',
@@ -83,11 +83,7 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
                   })
                 }
                 style={styles.toolButton}>
-                <Icon
-                  name="format-bold"
-                  size={24}
-                  color={state.fontWeight === 'bold' ? '#007AFF' : '#000000'}
-                />
+                <Icon name="format-bold" size={24} />
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -97,7 +93,27 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
                   })
                 }
                 style={styles.toolButton}>
-                <Icon name="color-lens" size={24} color={state.color} />
+                <Icon name="color-lens" size={24} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  onSave({
+                    text: state.text,
+                    color: state.color,
+                    fontWeight: state.fontWeight,
+                  });
+                  onDuplicate({
+                    text: state.text,
+                    color: state.color,
+                    fontWeight: state.fontWeight,
+                  });
+                  setOpen(false);
+                }}
+                style={styles.toolButton}>
+                <Icon name="content-copy" size={24} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={onDelete} style={styles.toolButton}>
+                <Icon name="delete" size={24} />
               </TouchableOpacity>
             </View>
             {state.showColorPicker && (

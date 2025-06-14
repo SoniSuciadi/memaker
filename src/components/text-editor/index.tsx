@@ -1,18 +1,16 @@
-import React, {useState, useRef} from 'react';
+import {useRef} from 'react';
 import {View, StyleSheet, TouchableOpacity} from 'react-native';
 import {Text} from 'react-native-gesture-handler';
-import ModalTextInput, {
-  ModalTextInputRef,
-  TextStyles,
-} from '../modal-text-input';
+import ModalTextInput from '../modal-text-input';
+import {ModalTextInputRef, TextStyles} from '../modal-text-input/types';
 
-const TextEditor = () => {
-  const [textStyles, setTextStyles] = useState<TextStyles>({
-    text: '',
-    color: '#000000',
-    fontWeight: 'normal',
-  });
-
+const TextEditor = (props: {
+  onDelete: () => void;
+  onDuplicate: (text: TextStyles) => void;
+  textStyles: TextStyles;
+  setTextStyles: (text: TextStyles) => void;
+}) => {
+  const {textStyles, setTextStyles, onDelete, onDuplicate} = props;
   const textInputModal = useRef<ModalTextInputRef>(null);
   const handleOpenModal = () => {
     textInputModal.current?.open(textStyles);
@@ -21,13 +19,15 @@ const TextEditor = () => {
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleOpenModal}>
-        <Text style={textStyles}>{textStyles.text || 'Edit teks'}</Text>
+        <Text style={textStyles}>{textStyles.text || 'Click to add text'}</Text>
       </TouchableOpacity>
       <ModalTextInput
         ref={textInputModal}
         onSave={styles => {
           setTextStyles(styles);
         }}
+        onDelete={onDelete}
+        onDuplicate={onDuplicate}
       />
     </View>
   );

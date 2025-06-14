@@ -23,7 +23,8 @@ import {TextStyles} from '../../components/modal-text-input/types';
 import CanvasButtons from '../../components/canvas-buttons';
 import ViewShot from 'react-native-view-shot';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {launchImageLibrary} from 'react-native-image-picker';
+import {Asset, launchImageLibrary} from 'react-native-image-picker';
+import ImageEditor from '../../components/image-editor';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -35,7 +36,7 @@ type Props = {
 
 const CanvasScreen: React.FC<Props> = ({route}) => {
   const {canvasId} = route.params;
-  const [images, setImages] = useState<{uri?: string; id: string}[]>([]);
+  const [images, setImages] = useState<Asset[]>([]);
   const [contents, setContents] = useState<TextStyles[]>([
     {
       text: '',
@@ -89,13 +90,7 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
       if (result.assets && result.assets.length > 0) {
         const selectedImage = result.assets[0];
         if (selectedImage.uri) {
-          setImages(prev => [
-            ...prev,
-            {
-              uri: selectedImage.uri,
-              id: Date.now().toString(),
-            },
-          ]);
+          setImages(prev => [...prev, selectedImage]);
         }
       }
     } catch (error) {
@@ -205,18 +200,7 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
                     key={index}
                     zIndex={3}
                     initialPosition={{x: 0, y: 0}}>
-                    <Image
-                      source={content}
-                      style={[
-                        styles.image,
-                        {
-                          width: calculatedSize.width,
-                          height: calculatedSize.height,
-                        },
-                      ]}
-                      resizeMode="contain"
-                      onLoad={() => console.log('Image loaded successfully')}
-                    />
+                    <ImageEditor content={content} />
                   </DraggableItem>
                 ))}
               </View>

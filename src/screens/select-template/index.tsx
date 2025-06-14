@@ -15,7 +15,7 @@ const SelectTemplateScreen = () => {
   const navigation = useNavigation<SelectTemplateScreenNavigationProp>();
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.headerTitle}>Select a Template</Text>
+      <Text style={styles.headerTitle}>Select meme Template</Text>
       <ScrollView
         horizontal
         pagingEnabled

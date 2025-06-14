@@ -1,15 +1,10 @@
 import React, {forwardRef, useImperativeHandle, useState} from 'react';
-import {
-  Modal,
-  View,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import {Modal, View, TextInput, TouchableOpacity} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import ColorPicker from 'react-native-wheel-color-picker';
 import ThemeButton from '../theme-button';
 import {ModalTextInputProps, ModalTextInputRef, TextEditorState} from './types';
+import {modalTextInputstyles} from './style';
 
 const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
   ({onSave, onDelete, onDuplicate}, ref) => {
@@ -61,11 +56,11 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
         transparent={true}
         animationType="fade"
         onRequestClose={() => setOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+        <View style={modalTextInputstyles.modalOverlay}>
+          <View style={modalTextInputstyles.modalContainer}>
             <TextInput
               style={[
-                styles.textInput,
+                modalTextInputstyles.textInput,
                 {color: state.color, fontWeight: state.fontWeight},
               ]}
               value={state.text}
@@ -74,7 +69,7 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
               multiline
             />
 
-            <View style={styles.toolbar}>
+            <View style={modalTextInputstyles.toolbar}>
               <TouchableOpacity
                 onPress={() =>
                   updateState({
@@ -82,7 +77,7 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
                       state.fontWeight === 'normal' ? 'bold' : 'normal',
                   })
                 }
-                style={styles.toolButton}>
+                style={modalTextInputstyles.toolButton}>
                 <Icon name="format-bold" size={24} />
               </TouchableOpacity>
 
@@ -92,7 +87,7 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
                     showColorPicker: !state.showColorPicker,
                   })
                 }
-                style={styles.toolButton}>
+                style={modalTextInputstyles.toolButton}>
                 <Icon name="color-lens" size={24} />
               </TouchableOpacity>
               <TouchableOpacity
@@ -109,15 +104,17 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
                   });
                   setOpen(false);
                 }}
-                style={styles.toolButton}>
+                style={modalTextInputstyles.toolButton}>
                 <Icon name="content-copy" size={24} />
               </TouchableOpacity>
-              <TouchableOpacity onPress={onDelete} style={styles.toolButton}>
+              <TouchableOpacity
+                onPress={onDelete}
+                style={modalTextInputstyles.toolButton}>
                 <Icon name="delete" size={24} />
               </TouchableOpacity>
             </View>
             {state.showColorPicker && (
-              <View style={styles.colorPickerContainer}>
+              <View style={modalTextInputstyles.colorPickerContainer}>
                 <ColorPicker
                   color={state.color}
                   onColorChange={color => updateState({color})}
@@ -127,7 +124,7 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
               </View>
             )}
 
-            <View style={styles.buttonContainer}>
+            <View style={modalTextInputstyles.buttonContainer}>
               <ThemeButton
                 backgroundColor="#FFFFFF"
                 fontColor="#3B4658"
@@ -146,69 +143,5 @@ const ModalTextInput = forwardRef<ModalTextInputRef, ModalTextInputProps>(
     );
   },
 );
-
-const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    backgroundColor: 'white',
-    width: '80%',
-    borderRadius: 10,
-    padding: 20,
-  },
-  textInput: {
-    minHeight: 100,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 5,
-    padding: 10,
-    marginBottom: 15,
-  },
-  toolbar: {
-    flexDirection: 'row',
-  },
-  toolButton: {
-    marginRight: 15,
-    padding: 5,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 15,
-  },
-  cancelButton: {
-    padding: 10,
-    marginRight: 10,
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    padding: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#007AFF',
-  },
-  saveButtonText: {
-    color: 'white',
-  },
-  colorPickerContainer: {
-    marginTop: 15,
-    padding: 10,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 5,
-    height: 100,
-  },
-  colorPickerCloseButton: {
-    marginTop: 10,
-    alignSelf: 'flex-end',
-  },
-  colorPickerCloseText: {
-    color: '#007AFF',
-  },
-});
 
 export default ModalTextInput;

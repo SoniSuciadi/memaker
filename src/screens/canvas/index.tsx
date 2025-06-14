@@ -1,13 +1,5 @@
-import React, {useMemo, useRef, useState} from 'react';
-import {
-  SafeAreaView,
-  View,
-  Text,
-  Image,
-  Platform,
-  PermissionsAndroid,
-  Alert,
-} from 'react-native';
+import React, {useMemo, useState} from 'react';
+import {SafeAreaView, View, Text, Image} from 'react-native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {RootStackParamList} from '../../navigation/config';
 import {StackNavigationProp} from '@react-navigation/stack';
@@ -20,10 +12,11 @@ import TextEditor from '../../components/text-editor';
 import {TextStyles} from '../../components/modal-text-input/types';
 import CanvasButtons from '../../components/canvas-buttons';
 import ViewShot from 'react-native-view-shot';
-import {CameraRoll} from '@react-native-camera-roll/camera-roll';
-import {Asset, launchImageLibrary} from 'react-native-image-picker';
+import {Asset} from 'react-native-image-picker';
 import ImageEditor from '../../components/image-editor';
 import {canvasStyle} from './style';
+import {useImagePicker} from '../../hooks/useImagePicker';
+import {useCanvasExport} from '../../hooks/useExport';
 
 type CanvasScreenRouteProp = RouteProp<RootStackParamList, 'canvas'>;
 type Props = {
@@ -48,97 +41,28 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
 
   const {calculatedSize, handleLayout} = useImageSizing(selectTemplateImage);
 
+  const {pickImage} = useImagePicker();
+  const {viewShotRef, exportCanvas} = useCanvasExport();
+
   const onDelete = (index: number) => {
-    setContents(prevContents => prevContents.filter((_, i) => i !== index));
+    setContents(prev => prev.filter((_, i) => i !== index));
   };
 
   const onDuplicate = (text: TextStyles) => {
-    setContents(prevContents => [...prevContents, text]);
+    setContents(prev => [...prev, text]);
   };
+
   const onAddText = () => {
-    setContents(prevContents => [
-      ...prevContents,
-      {
-        text: '',
-        color: '#000000',
-        fontWeight: 'normal',
-      },
+    setContents(prev => [
+      ...prev,
+      {text: '', color: '#000000', fontWeight: 'normal'},
     ]);
   };
+
   const onAddImage = async () => {
-    try {
-      const result = await launchImageLibrary({
-        mediaType: 'photo',
-        quality: 1,
-        selectionLimit: 1,
-      });
-
-      if (result.didCancel) {
-        console.log('User cancelled image picker');
-        return;
-      }
-
-      if (result.errorCode) {
-        console.error('ImagePicker Error: ', result.errorMessage);
-        Alert.alert('Error', 'Gagal memilih gambar');
-        return;
-      }
-
-      if (result.assets && result.assets.length > 0) {
-        const selectedImage = result.assets[0];
-        if (selectedImage.uri) {
-          setImages(prev => [...prev, selectedImage]);
-        }
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      Alert.alert('Error', 'Terjadi kesalahan saat memilih gambar');
-    }
-  };
-
-  const viewShotRef = useRef<ViewShot>(null);
-
-  const onExport = async () => {
-    try {
-      if (viewShotRef.current?.capture) {
-        if (Platform.OS === 'android') {
-          if (Platform.Version <= 29) {
-            const granted = await PermissionsAndroid.request(
-              PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-              {
-                title: 'Izin Penyimpanan',
-                message: 'Aplikasi membutuhkan izin untuk menyimpan gambar',
-                buttonNeutral: 'Tanya Nanti',
-                buttonNegative: 'Batal',
-                buttonPositive: 'OK',
-              },
-            );
-            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-              Alert.alert(
-                'Izin ditolak',
-                'Tidak dapat menyimpan tanpa izin penyimpanan',
-              );
-              return;
-            }
-          }
-        }
-
-        const uri = await viewShotRef.current.capture();
-
-        if (Platform.OS === 'android') {
-          await CameraRoll.save(uri, {type: 'photo'});
-        } else {
-          await CameraRoll.save(uri);
-        }
-
-        Alert.alert('Berhasil', 'Desain berhasil disimpan ke galeri');
-      }
-    } catch (error) {
-      console.error('Error saving image:', error);
-      Alert.alert(
-        'Gagal',
-        'Gagal menyimpan desain: ' + (error as Error).message,
-      );
+    const selectedImage = await pickImage();
+    if (selectedImage?.uri) {
+      setImages(prev => [...prev, selectedImage]);
     }
   };
 
@@ -210,7 +134,7 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
       <CanvasButtons
         onAddImage={onAddImage}
         onAddText={onAddText}
-        onExport={onExport}
+        onExport={exportCanvas}
       />
     </SafeAreaView>
   );

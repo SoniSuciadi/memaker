@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react';
-import {_Image} from 'react-native';
+import {Image} from 'react-native';
 import {Template} from '../constant/arrayOfTemplate';
 
 const useImageSizing = (selectTemplateImage: Template | undefined) => {
@@ -20,7 +20,7 @@ const useImageSizing = (selectTemplateImage: Template | undefined) => {
 
   useEffect(() => {
     if (selectTemplateImage) {
-      const {width, height} = _Image.resolveAssetSource(
+      const {width, height} = Image.resolveAssetSource(
         selectTemplateImage.image,
       );
       setImageSize({width, height});

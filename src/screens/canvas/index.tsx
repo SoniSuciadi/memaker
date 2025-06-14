@@ -7,7 +7,7 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import {GestureHandlerRootView, TextInput} from 'react-native-gesture-handler';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import {RootStackParamList} from '../../navigation/config';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {RouteProp} from '@react-navigation/native';
@@ -15,6 +15,7 @@ import {arrayOfTemplate} from '../../constant/arrayOfTemplate';
 import DraggableItem from '../../components/draggable-item';
 import ZoomableCanvas from '../../components/zoomable-canvas';
 import useImageSizing from '../../hooks/useImageSizing';
+import TextEditor from '../../components/text-editor';
 
 const {width: screenWidth} = Dimensions.get('window');
 
@@ -66,7 +67,10 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
               )}
 
               <DraggableItem zIndex={3}>
-                <TextInput placeholder="Drag me" style={styles.textInput} />
+                <TextEditor />
+              </DraggableItem>
+              <DraggableItem zIndex={3}>
+                <TextEditor />
               </DraggableItem>
             </View>
           </ZoomableCanvas>
@@ -76,7 +80,6 @@ const CanvasScreen: React.FC<Props> = ({route}) => {
   );
 };
 
-// Styles tetap sama
 const styles = StyleSheet.create({
   container: {
     flex: 1,
